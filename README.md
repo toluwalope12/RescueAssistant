@@ -1,16 +1,24 @@
-# rescue_assistant
+# Rescue AI Assistant 🚑 🎙️
 
-A new Flutter project.
+**A Voice-First Emergency Response Tool built for the ElevenLabs Hackathon.**
 
-## Getting Started
+Rescue AI is designed for high-stress medical emergencies where typing is impossible. It uses **ElevenLabs'** high-fidelity voice synthesis to provide calm, audible guidance to responders, ensuring they can keep their hands on the patient and their eyes on the situation.
 
-This project is a starting point for a Flutter application.
+## 🚀 The ElevenLabs Advantage
+In a crisis, people experience "tunnel vision" and struggle to read text. We integrated **ElevenLabs** to:
+* **Reduce Cognitive Load:** Audible instructions allow hands-free first aid.
+* **Calm the Responder:** A professional, human-like voice reduces bystander panic.
+* **Contextual SOS:** The AI analyzes the injury and generates a specific SMS for emergency contacts.
 
-A few resources to get you started if this is your first Flutter project:
+## 🛠️ Tech Stack
+* **Voice AI:** ElevenLabs (Text-to-Speech)
+* **Reasoning:** Google Gemini API
+* **Framework:** Flutter (Dart)
+* **Local Storage:** Hive (Offline-first history and settings)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 📦 How to Run
+1. Clone the repo.
+2. Add a `.env` file with your `GEMINI_API_KEY` and `ELEVEN_LABS_API_KEY`.
+3. Run `flutter pub get`.
+4. Run `dart run build_runner build --delete-conflicting-outputs`.
+5. Run `flutter run`.
