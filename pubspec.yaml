@@ -1,0 +1,57 @@
+name: rescue_assistant
+description: Rescue Assistant - voice-driven emergency helper
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0" # Updated for 2026 compatibility
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # === AI & Intelligence ===
+  # January 2026 stable version for Gemini 2.5/3.0
+  google_generative_ai: ^0.4.6 
+  flutter_dotenv: ^5.1.0
+
+  # === Audio Pipeline ===
+  # The 'record' package is now at v6.1.2 in early 2026
+  record: ^6.1.2 
+  # Version 4.2.5 is the current stable for 2026
+  flutter_tts: ^4.2.5 
+  # High-fidelity playback for ElevenLabs
+  audioplayers: ^5.2.1 
+  
+  # === Core Infrastructure ===
+  http: ^1.2.0
+  flutter_contacts: ^1.1.9+2
+  permission_handler: ^11.3.1
+  path_provider: ^2.1.2
+  # Version 7.0.0 is the 2026 standard
+  connectivity_plus: ^7.0.0
+  url_launcher: ^6.3.0
+
+  # === Data & State ===
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  provider: ^6.1.2
+  intl: ^0.19.0
+
+  # === UI/UX ===
+  shimmer: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.9
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+    - assets/images/
+    - assets/audio/
