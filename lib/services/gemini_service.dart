@@ -1,39 +1,56 @@
 import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
-  // Verified Key - No leading/trailing spaces
-  static const String _apiKey = "AIzaSyCpiqnw235a7l8DRQMdfzimS4dJHditAO8"; 
-  
-  final model = GenerativeModel(
-    model: 'gemini-2.5-flash', 
-    apiKey: _apiKey, 
-  );
+  late final GenerativeModel model;
+
+  GeminiService() {
+    final apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
+    
+    // Using Gemini 3 Flash for maximum speed and 2026-grade accuracy
+    model = GenerativeModel(
+      model: 'gemini-3-flash-preview', 
+      apiKey: apiKey,
+      // System instructions act as a permanent brain for the AI
+      systemInstruction: Content.system("""
+        You are a professional Medical Emergency Dispatcher. 
+        Analyze ONLY the audio provided in the CURRENT request. 
+        Ignore all previous context or injuries.
+        If the user is choking: Give Heimlich maneuver steps.
+        If the user has a broken bone: Tell them to immobilize it.
+        Be concise (under 40 words) and direct.
+      """),
+      safetySettings: [
+        SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.none),
+      ],
+    );
+  }
 
   Future<String> analyzeEmergency(String audioPath) async {
     try {
-      final audioFile = File(audioPath);
-      if (!await audioFile.exists()) return "Error: Audio file not found.";
+      final audioBytes = await File(audioPath).readAsBytes();
       
-      final audioBytes = await audioFile.readAsBytes();
-      
-      final prompt = [
+      // We wrap the audio in a fresh Content object to ensure zero carry-over
+      final content = [
         Content.multi([
-          TextPart("""You are an emergency medical responder. 
-          Listen to the user's voice and identify the crisis.
-          Give exactly 3 clear, life-saving steps.
-          Keep it under 40 words total. Be calm."""),
           DataPart('audio/wav', audioBytes),
+          TextPart("Analyze this specific audio and provide immediate life-saving steps.")
         ])
       ];
 
-      final response = await model.generateContent(prompt);
+      final response = await model.generateContent(content)
+          .timeout(const Duration(seconds: 15)); // Faster timeout for Flash
+
+      String result = response.text?.replaceAll('*', '') ?? "";
       
-      // Use the same logic we saw in the terminal test
-      return response.text ?? "I'm here. Stay calm and tell me what happened.";
+      if (result.isEmpty) throw Exception("Empty Response");
+      return result;
+
     } catch (e) {
-      print("APP GEMINI ERROR: $e");
-      return "Connection hiccup. Please check the person's breathing immediately.";
+      print("Emergency AI Error: $e");
+      // Generic safety fallback - NO specific injury mentioned
+      return "I'm having trouble hearing the audio. Please stay calm, check the person's airway, and call emergency services immediately.";
     }
   }
 }

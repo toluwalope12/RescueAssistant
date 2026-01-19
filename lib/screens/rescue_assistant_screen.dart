@@ -17,11 +17,12 @@ class RescueAssistantScreen extends StatefulWidget {
 
 class _RescueAssistantScreenState extends State<RescueAssistantScreen> {
   bool isAnalyzing = false;
-  bool _isManualRecording = false;
-  String displayInstructions = "Welcome, please tap the button to explain your emergency.";
+  bool _isRecording = false; // Tracks if user is currently holding the button
+  String displayInstructions = "Hold the button to explain your emergency.";
 
+  // Sends the current instruction via SMS to emergency contacts
   Future<void> _sendSmartSOS() async {
-    String contextMessage = displayInstructions.contains("Welcome") 
+    String contextMessage = displayInstructions.contains("Hold") 
         ? "EMERGENCY: I need immediate assistance." 
         : "EMERGENCY: I need help with: $displayInstructions";
 
@@ -40,6 +41,7 @@ class _RescueAssistantScreenState extends State<RescueAssistantScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Accessing services via Provider
     final voiceService = Provider.of<VoicePipelineService>(context);
     final rescueService = Provider.of<RescueService>(context, listen: false);
     final geminiService = GeminiService();
@@ -55,6 +57,7 @@ class _RescueAssistantScreenState extends State<RescueAssistantScreen> {
             children: [
               const SizedBox(height: 20),
               
+              // SOS Quick Trigger Header
               Align(
                 alignment: Alignment.topRight,
                 child: IconButton(
@@ -75,17 +78,17 @@ class _RescueAssistantScreenState extends State<RescueAssistantScreen> {
               ),
               const SizedBox(height: 20),
 
+              // AI Output Display Box
               Container(
                 width: double.infinity,
                 constraints: const BoxConstraints(minHeight: 120),
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  // FIXED: Updated withOpacity to withValues(alpha: ...)
                   color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: _isManualRecording ? Colors.redAccent : Colors.transparent,
-                    width: 1,
+                    color: _isRecording ? Colors.redAccent : Colors.transparent,
+                    width: 2,
                   ),
                 ),
                 child: Text(
@@ -93,14 +96,15 @@ class _RescueAssistantScreenState extends State<RescueAssistantScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 17,
-                      color: (isAnalyzing || _isManualRecording) ? Colors.redAccent : Colors.white70,
+                      color: (_isRecording || isAnalyzing) ? Colors.redAccent : Colors.white70,
                       height: 1.4,
-                      fontWeight: (isAnalyzing || _isManualRecording) ? FontWeight.bold : FontWeight.normal),
+                      fontWeight: (_isRecording || isAnalyzing) ? FontWeight.bold : FontWeight.normal),
                 ),
               ),
 
               const SizedBox(height: 20),
 
+              // Analysis Progress Indicator
               SizedBox(
                 height: 50, 
                 child: isAnalyzing
@@ -115,78 +119,89 @@ class _RescueAssistantScreenState extends State<RescueAssistantScreen> {
 
               const SizedBox(height: 20),
 
+              // WHATSAPP-STYLE HOLD TO RECORD BUTTON
               GestureDetector(
-                onTap: () async {
-                  if (!_isManualRecording) {
-                    HapticFeedback.heavyImpact(); 
-                    setState(() {
-                      _isManualRecording = true;
-                      displayInstructions = "Listening... Tap again when finished.";
-                    });
-                    voiceService.startRecording();
-                  } else {
-                    HapticFeedback.mediumImpact();
-                    setState(() {
-                      _isManualRecording = false;
-                      isAnalyzing = true;
-                      displayInstructions = "Analyzing emergency...";
-                    });
+                onLongPressStart: (_) async {
+                  // Vibrate and start recording
+                  HapticFeedback.heavyImpact(); 
+                  setState(() {
+                    _isRecording = true;
+                    displayInstructions = "Recording... Release to get help.";
+                  });
+                  await voiceService.startRecording();
+                },
+                onLongPressEnd: (_) async {
+                  // Vibrate and stop recording
+                  HapticFeedback.mediumImpact();
+                  setState(() {
+                    _isRecording = false;
+                    isAnalyzing = true;
+                    displayInstructions = "Analyzing emergency audio...";
+                  });
 
-                    String? path = await voiceService.stopRecording();
-                    if (path != null) {
-                      String instructions = await geminiService.analyzeEmergency(path);
-                      
-                      if (mounted) {
-                        setState(() {
-                          displayInstructions = instructions;
-                          isAnalyzing = false;
-                        });
-                      }
-
-                      await rescueService.speak(instructions);
-
-                      try {
-                        final historyEntry = HistoryEntry(
-                          timestamp: DateTime.now(),
-                          transcription: "Voice Input", 
-                          responseText: instructions,
-                        );
-                        var box = Hive.box<HistoryEntry>('history');
-                        await box.add(historyEntry);
-                      } catch (e) {
-                        debugPrint("History Save Error: $e");
-                      }
+                  String? path = await voiceService.stopRecording();
+                  
+                  if (path != null) {
+                    // Send to Gemini AI for Analysis
+                    String instructions = await geminiService.analyzeEmergency(path);
+                    
+                    if (mounted) {
+                      setState(() {
+                        displayInstructions = instructions;
+                        isAnalyzing = false;
+                      });
                     }
+
+                    // Convert AI Response to Voice via ElevenLabs
+                    await rescueService.speak(instructions);
+
+                    // Save to Local History
+                    try {
+                      final historyEntry = HistoryEntry(
+                        timestamp: DateTime.now(),
+                        transcription: "Voice SOS", 
+                        responseText: instructions,
+                      );
+                      var box = Hive.box<HistoryEntry>('history');
+                      await box.add(historyEntry);
+                    } catch (e) {
+                      debugPrint("History Save Error: $e");
+                    }
+                  } else {
+                    setState(() {
+                      isAnalyzing = false;
+                      displayInstructions = "Audio capture failed. Please try again.";
+                    });
                   }
                 },
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.all(35),
+                  duration: const Duration(milliseconds: 150),
+                  padding: EdgeInsets.all(_isRecording ? 45 : 35),
                   decoration: BoxDecoration(
-                    color: _isManualRecording ? Colors.red : Colors.red[900],
+                    color: _isRecording ? Colors.red : Colors.red[900],
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        // FIXED: Updated withOpacity to withValues(alpha: ...)
-                        color: _isManualRecording
-                            ? Colors.red.withValues(alpha: 0.4)
+                        color: _isRecording
+                            ? Colors.red.withValues(alpha: 0.6)
                             : Colors.black.withValues(alpha: 0.4),
-                        blurRadius: 30,
-                        spreadRadius: 5,
+                        blurRadius: _isRecording ? 50 : 30,
+                        spreadRadius: _isRecording ? 10 : 5,
                       )
                     ],
                   ),
                   child: Icon(
-                    _isManualRecording ? Icons.stop : Icons.mic,
+                    _isRecording ? Icons.mic : Icons.mic_none,
                     size: 60,
                     color: Colors.white,
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                "TAP TO SPEAK",
-                style: TextStyle(
+              
+              const SizedBox(height: 25),
+              Text(
+                _isRecording ? "RELEASE TO SEND" : "HOLD TO RECORD",
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,
                   color: Colors.white24,

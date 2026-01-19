@@ -1,24 +1,24 @@
-# Rescue AI Assistant 🚑 🎙️
+# 🚨 Rescue AI Assistant (2026 Hackathon Edition)
 
-**A Voice-First Emergency Response Tool built for the ElevenLabs Hackathon.**
+An ultra-fast, voice-first emergency response app powered by **Gemini 3 Flash** and **ElevenLabs**. Designed for high-stress situations where every second counts.
 
-Rescue AI is designed for high-stress medical emergencies where typing is impossible. It uses **ElevenLabs'** high-fidelity voice synthesis to provide calm, audible guidance to responders, ensuring they can keep their hands on the patient and their eyes on the situation.
-
-## 🚀 The ElevenLabs Advantage
-In a crisis, people experience "tunnel vision" and struggle to read text. We integrated **ElevenLabs** to:
-* **Reduce Cognitive Load:** Audible instructions allow hands-free first aid.
-* **Calm the Responder:** A professional, human-like voice reduces bystander panic.
-* **Contextual SOS:** The AI analyzes the injury and generates a specific SMS for emergency contacts.
+## 🚀 Key Features
+- **WhatsApp-Style Interface:** Familiar long-press to record interaction.
+- **Gemini 3 Flash Integration:** Real-time multimodal analysis of emergency audio (choking, bleeding, fire, etc.).
+- **Life-Saving Audio Guidance:** Instant, professional first-aid instructions delivered via **ElevenLabs TTS**.
+- **Privacy First:** Emergency audio is processed and immediately shredded (deleted) from the device.
 
 ## 🛠️ Tech Stack
-* **Voice AI:** ElevenLabs (Text-to-Speech)
-* **Reasoning:** Google Gemini API
-* **Framework:** Flutter (Dart)
-* **Local Storage:** Hive (Offline-first history and settings)
+- **Framework:** Flutter (3.x)
+- **AI Model:** Gemini 3 Flash (Multimodal Audio-to-Text)
+- **Voice:** ElevenLabs API
+- **Local Database:** Hive (Emergency History)
 
-## 📦 How to Run
+## 🏃‍♂️ How to Run
 1. Clone the repo.
-2. Add a `.env` file with your `GEMINI_API_KEY` and `ELEVEN_LABS_API_KEY`.
+2. Add your `GEMINI_API_KEY` and `ELEVENLABS_API_KEY` to the `.env` file.
 3. Run `flutter pub get`.
-4. Run `dart run build_runner build --delete-conflicting-outputs`.
-5. Run `flutter run`.
+4. Run `flutter run`.
+
+## 🛡️ Safety Note
+This is a hackathon prototype. In a real emergency, always prioritize calling local emergency services (911/112/999).
